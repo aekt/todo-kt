@@ -67,12 +67,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun switchToTodoList() {
+        setTitle(R.string.action_bar_title_todo_list)
         val ft = supportFragmentManager.beginTransaction()
         ft.replace(R.id.fragment_placeholder, TodoListFragment())
         ft.commit()
     }
 
     private fun switchToFinishedList() {
+        setTitle(R.string.action_bar_title_finish_list)
         val ft = supportFragmentManager.beginTransaction()
         ft.replace(R.id.fragment_placeholder, FinishedListFragment())
         ft.commit()
