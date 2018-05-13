@@ -30,7 +30,7 @@ class SharedPreferencesStore(sharedPreferences: SharedPreferences) {
                     is JSONObject -> {
                         val t = obj.getString("text")
                         val f = obj.getBoolean("finished")
-                        output.add(TodoModel(t, f))
+                        output.add(TodoModel(i, t, f))
                     }
                 }
             }

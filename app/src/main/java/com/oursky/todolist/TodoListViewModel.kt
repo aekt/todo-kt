@@ -12,4 +12,18 @@ class TodoListViewModel : ViewModel() {
     fun restoreFromCopy(todos: ArrayList<TodoModel>) {
         mData.value = todos
     }
+    fun addTodo(todo: TodoModel): ArrayList<TodoModel> {
+        val copy = ArrayList<TodoModel>(mData.value)
+        copy.add(todo)
+        mData.value = copy
+        return copy
+    }
+    fun setTodo(todo: TodoModel): ArrayList<TodoModel> {
+        val copy = ArrayList(mData.value)
+        var target = copy.find { it -> it.id == todo.id }
+        var pos = copy.indexOf(target)
+        copy[pos] = todo
+        mData.value = copy
+        return copy
+    }
 }
