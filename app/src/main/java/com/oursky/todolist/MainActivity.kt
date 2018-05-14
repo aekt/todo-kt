@@ -10,6 +10,12 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+    enum class DrawerView {
+        TODO, FINISHED,
+    }
+
+    private val currentDrawerViewKey = "currentDrawerViewKey"
+    private var mCurrentDrawerView = DrawerView.TODO
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,7 +29,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         nav_view.setNavigationItemSelectedListener(this)
 
-        switchToTodoList()
+        if (savedInstanceState != null) {
+            mCurrentDrawerView = DrawerView.values()[savedInstanceState.getInt(currentDrawerViewKey)]
+        }
+
+        goToCurrentDrawerView()
     }
 
     override fun onBackPressed() {
@@ -49,11 +59,26 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return true
     }
 
+    override fun onSaveInstanceState(outState: Bundle?) {
+        super.onSaveInstanceState(outState)
+
+        outState?.putInt(currentDrawerViewKey, mCurrentDrawerView.ordinal)
+    }
+
+    private fun goToCurrentDrawerView() {
+        if (mCurrentDrawerView == DrawerView.TODO) {
+            switchToTodoList()
+        } else {
+            switchToFinishedList()
+        }
+    }
+
     private fun switchToTodoList() {
         setTitle(R.string.action_bar_title_todo_list)
         val ft = supportFragmentManager.beginTransaction()
         ft.replace(R.id.fragment_placeholder, TodoListFragment())
         ft.commit()
+        mCurrentDrawerView = DrawerView.TODO
     }
 
     private fun switchToFinishedList() {
@@ -61,6 +86,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val ft = supportFragmentManager.beginTransaction()
         ft.replace(R.id.fragment_placeholder, FinishedListFragment())
         ft.commit()
+        mCurrentDrawerView = DrawerView.FINISHED
     }
 
 }
