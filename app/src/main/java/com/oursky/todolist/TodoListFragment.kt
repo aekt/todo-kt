@@ -1,73 +1,72 @@
 package com.oursky.todolist
 
-import android.arch.lifecycle.Observer
-import android.arch.lifecycle.ViewModelProviders
+import android.content.Context
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v7.app.AlertDialog
-import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import kotlinx.android.synthetic.main.fragment_todo_list.*
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import com.oursky.todolist.databinding.FragmentTodoBinding
 
-class TodoListFragment: Fragment(), TodoListAdapter.TodoListDelegate {
-    private lateinit var mTodoListViewModel: TodoListViewModel
-    private lateinit var mAdapter: TodoListAdapter
-    private lateinit var mSharePreferenceStore: SharedPreferencesStore
+class TodoListFragment : Fragment() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    private var _binding: FragmentTodoBinding? = null
+    private val binding get() = _binding!!
 
-        mSharePreferenceStore = SharedPreferencesStore.fromContext(context)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val viewModel =
+            ViewModelProvider(this).get(TodoListViewModel::class.java)
+        val sharedPref = this.requireActivity().getSharedPreferences("", Context.MODE_PRIVATE)
 
-        mAdapter = TodoListAdapter()
-        mAdapter.setDelegate(this@TodoListFragment)
+        viewModel.loadFromSharedPreference(sharedPref)
 
-        mTodoListViewModel = ViewModelProviders.of(this).get(TodoListViewModel::class.java)
-        mTodoListViewModel.get().observe(this, Observer {
+        _binding = FragmentTodoBinding.inflate(inflater, container, false)
+        val root = binding.root
+
+        val adapter = TodoItemAdapter(
+            { item ->
+                run {
+                    viewModel.toggle(item)
+                    viewModel.saveToSharedPreference(sharedPref)
+                }
+            },
+            { item ->
+                run {
+                    viewModel.remove(item)
+                }
+            },
+        )
+
+        val recyclerView = binding.todoList
+        recyclerView.adapter = adapter
+
+        viewModel.list.observe(viewLifecycleOwner) {
             it?.let {
-                mAdapter.setTodos(ArrayList(it.filter { it -> !it.finished }))
-                mAdapter.notifyDataSetChanged()
+                adapter.submitList(it)
             }
-        })
-
-        mTodoListViewModel.restoreFromCopy(mSharePreferenceStore.getTodoList())
-    }
-
-    override fun onCreateView(inflater: LayoutInflater?,
-                              container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater?.inflate(R.layout.fragment_todo_list,
-                container, false)
-    }
-
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        todo_list.adapter = mAdapter
-        todo_list.layoutManager = LinearLayoutManager(context)
-
-        fab.setOnClickListener { _ ->
-            AlertDialog.Builder(context).apply {
-                setTitle(R.string.create_todo)
-                val customView = LayoutInflater.from(context).inflate(R.layout.dialog_create_todo, null)
-                val createTodoEditText = customView.findViewById<EditText>(R.id.create_todo_edittext)
-                setView(customView)
-                setNeutralButton(R.string.phrase_ok, { dialog, _ ->
-                    val todoText = createTodoEditText.text.toString()
-                    if (todoText.isNotEmpty()) {
-                        val todos = mTodoListViewModel.addTodo(TodoModel(mAdapter.itemCount, todoText, false))
-                        mSharePreferenceStore.setTodoList(todos)
-                    }
-                    dialog.dismiss()
-                })
-            }.create().show()
         }
+
+        val editText = binding.todoListInput
+
+        val addButton = binding.todoListAddButton
+        addButton.setOnClickListener {
+            val item = TodoItem(editText.text.toString(), true)
+            editText.setText("")
+            editText.clearFocus()
+            viewModel.append(item)
+            viewModel.saveToSharedPreference(sharedPref)
+        }
+
+        return root
     }
 
-    override fun onFinished(id: Int, text: String) {
-        val todos = mTodoListViewModel.setTodo(TodoModel(id, text, true))
-        mSharePreferenceStore.setTodoList(todos)
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

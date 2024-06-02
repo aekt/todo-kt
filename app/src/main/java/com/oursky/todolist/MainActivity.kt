@@ -1,92 +1,35 @@
 package com.oursky.todolist
 
 import android.os.Bundle
-import android.support.design.widget.NavigationView
-import android.support.v4.view.GravityCompat
-import android.support.v7.app.ActionBarDrawerToggle
-import android.support.v7.app.AppCompatActivity
-import android.view.MenuItem
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.app_bar_main.*
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.findNavController
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.navigation.ui.setupWithNavController
+import com.oursky.todolist.databinding.ActivityMainBinding
 
-class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
-    enum class DrawerView {
-        TODO, FINISHED,
-    }
+class MainActivity : AppCompatActivity() {
 
-    private val currentDrawerViewKey = "currentDrawerViewKey"
-    private var mCurrentDrawerView = DrawerView.TODO
+    private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        setSupportActionBar(toolbar)
 
-        val toggle = ActionBarDrawerToggle(
-                this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
-        drawer_layout.addDrawerListener(toggle)
-        toggle.syncState()
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        nav_view.setNavigationItemSelectedListener(this)
+        val navView: BottomNavigationView = binding.navView
 
-        if (savedInstanceState != null) {
-            mCurrentDrawerView = DrawerView.values()[savedInstanceState.getInt(currentDrawerViewKey)]
-        }
-
-        goToCurrentDrawerView()
+        val navController = findNavController(R.id.nav_host_fragment_activity_main)
+        // Passing each menu ID as a set of Ids because each
+        // menu should be considered as top level destinations.
+        val appBarConfiguration = AppBarConfiguration(
+            setOf(
+                R.id.navigation_todo, R.id.navigation_finished
+            )
+        )
+        setupActionBarWithNavController(navController, appBarConfiguration)
+        navView.setupWithNavController(navController)
     }
-
-    override fun onBackPressed() {
-        if (drawer_layout.isDrawerOpen(GravityCompat.START)) {
-            drawer_layout.closeDrawer(GravityCompat.START)
-        } else {
-            super.onBackPressed()
-        }
-    }
-
-    override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        // Handle navigation view item clicks here.
-        when (item.itemId) {
-            R.id.nav_todo -> {
-                switchToTodoList()
-            }
-            R.id.nav_finished -> {
-                switchToFinishedList()
-            }
-        }
-
-        drawer_layout.closeDrawer(GravityCompat.START)
-        return true
-    }
-
-    override fun onSaveInstanceState(outState: Bundle?) {
-        super.onSaveInstanceState(outState)
-
-        outState?.putInt(currentDrawerViewKey, mCurrentDrawerView.ordinal)
-    }
-
-    private fun goToCurrentDrawerView() {
-        if (mCurrentDrawerView == DrawerView.TODO) {
-            switchToTodoList()
-        } else {
-            switchToFinishedList()
-        }
-    }
-
-    private fun switchToTodoList() {
-        setTitle(R.string.action_bar_title_todo_list)
-        val ft = supportFragmentManager.beginTransaction()
-        ft.replace(R.id.fragment_placeholder, TodoListFragment())
-        ft.commit()
-        mCurrentDrawerView = DrawerView.TODO
-    }
-
-    private fun switchToFinishedList() {
-        setTitle(R.string.action_bar_title_finish_list)
-        val ft = supportFragmentManager.beginTransaction()
-        ft.replace(R.id.fragment_placeholder, FinishedListFragment())
-        ft.commit()
-        mCurrentDrawerView = DrawerView.FINISHED
-    }
-
 }

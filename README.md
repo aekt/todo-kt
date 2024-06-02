@@ -1,29 +1,24 @@
 # todo-kt
+
 A simple todo app run in Android written in Kotlin.
 
-Android Studio: 3.2
+Android Studio: Jellyfish
 
 ## Bug
 
-- Pressing enter don't create todo item
-
-## Improvement
-
-- Delete task at finished list
-  - Long press to invoke a confirm dialog
-  - If user confirm the action, the item will be deleted
+- Removed todo/finished item reappears after switching tab
+- Done action in keyboard doesn't create todo item
 
 ## Task
 
 1. Show me you can read code and produce good clean code
-2. Fix the bug
-3. Add the delete feature
-4. Any refactoring you think will make the code better, reduce the chance to
-   produce bugs.
+2. Fix the above bugs
+3. Any refactoring you think will make the code better, reduce the chance to
+   produce above bugs
 
 ## Constraint
 
-- You are not allow to import external library
+- You are not allowed to import any external libraries
 - Time limits is 1 hr
 
 ## Evaluation

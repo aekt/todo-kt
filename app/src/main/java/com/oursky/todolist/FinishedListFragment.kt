@@ -1,48 +1,63 @@
 package com.oursky.todolist
 
-import android.arch.lifecycle.Observer
-import android.arch.lifecycle.ViewModelProviders
+import android.content.Context
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import kotlinx.android.synthetic.main.fragment_finished_list.*
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import com.oursky.todolist.databinding.FragmentFinishedBinding
 
-class FinishedListFragment: Fragment() {
-    private lateinit var mTodoListViewModel: TodoListViewModel
-    private lateinit var mAdapter: FinishedListAdapter
-    private lateinit var mSharePreferenceStore: SharedPreferencesStore
+class FinishedListFragment : Fragment() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    private var _binding: FragmentFinishedBinding? = null
+    private val binding get() = _binding!!
 
-        mSharePreferenceStore = SharedPreferencesStore.fromContext(context)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val viewModel =
+            ViewModelProvider(this).get(FinishedListViewModel::class.java)
+        val sharedPref = this.requireActivity().getSharedPreferences("", Context.MODE_PRIVATE)
 
-        mAdapter = FinishedListAdapter()
+        viewModel.loadFromSharedPreference(
+            this.requireActivity().getSharedPreferences("", Context.MODE_PRIVATE)
+        )
 
-        mTodoListViewModel = ViewModelProviders.of(this).get(TodoListViewModel::class.java)
-        mTodoListViewModel.get().observe(this, Observer {
+        _binding = FragmentFinishedBinding.inflate(inflater, container, false)
+        val root = binding.root
+
+        val adapter = TodoItemAdapter(
+            { item ->
+                run {
+                    viewModel.toggle(item)
+                    viewModel.saveToSharedPreference(sharedPref)
+                }
+            },
+            { item ->
+                run {
+                    viewModel.remove(item)
+                }
+            },
+        )
+
+        val recyclerView = binding.todoList
+        recyclerView.adapter = adapter
+
+        viewModel.list.observe(viewLifecycleOwner) {
             it?.let {
-                mAdapter.setTodos(ArrayList(it.filter { it -> it.finished }))
-                mAdapter.notifyDataSetChanged()
+                adapter.submitList(it)
             }
-        })
+        }
 
-        mTodoListViewModel.restoreFromCopy(mSharePreferenceStore.getTodoList())
+        return root
     }
 
-    override fun onCreateView(inflater: LayoutInflater?,
-                              container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater?.inflate(R.layout.fragment_finished_list,
-                container, false)
-    }
-
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        finished_list.adapter = mAdapter
-        finished_list.layoutManager = LinearLayoutManager(context)
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

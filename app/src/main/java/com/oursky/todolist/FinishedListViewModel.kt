@@ -6,17 +6,14 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.map
 
-class TodoListViewModel : ViewModel() {
+class FinishedListViewModel : ViewModel() {
 
     private val _list = MutableLiveData<List<TodoItem>?>()
-    val list: LiveData<List<TodoItem>?> get() = _list.map { data -> data?.filter { item -> item.pending } }
+    val list: LiveData<List<TodoItem>?> get() = _list.map { data -> data?.filter { item -> !item.pending } }
 
     fun loadFromSharedPreference(sharedPreferences: SharedPreferences) {
         val store = SharedPreferencesStore(sharedPreferences)
-        _list.value = TodoItem.tryParse(store.get("todo-items")) ?: listOf(
-            TodoItem("One", true),
-            TodoItem("Two", true),
-        )
+        _list.value = TodoItem.tryParse(store.get("todo-items")) ?: listOf()
     }
 
     fun saveToSharedPreference(sharedPreferences: SharedPreferences) {
@@ -36,9 +33,6 @@ class TodoListViewModel : ViewModel() {
 
     fun remove(item: TodoItem) {
         _list.value = _list.value?.filter { v -> v != item }
-    }
-
-    fun append(item: TodoItem) {
-        _list.value = _list.value?.plus(item)
+        println()
     }
 }
